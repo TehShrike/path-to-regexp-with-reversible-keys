@@ -1,7 +1,7 @@
 {
-  "name": "path-to-regexp",
-  "description": "Express style path to RegExp utility",
-  "version": "1.0.1",
+  "name": "path-to-regexp-with-reversible-keys",
+  "description": "A fork with an extra feature",
+  "version": "1.0.0",
   "scripts": {
     "test": "istanbul cover node_modules/mocha/bin/_mocha -- -R spec"
   },
@@ -11,15 +11,10 @@
     "route",
     "routing"
   ],
-  "component": {
-    "scripts": {
-      "path-to-regexp": "index.js"
-    }
-  },
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/pillarjs/path-to-regexp.git"
+    "url": "https://github.com/tehshrike/path-to-regexp-with-reversible-keys.git"
   },
   "devDependencies": {
     "istanbul": "~0.3.0",
