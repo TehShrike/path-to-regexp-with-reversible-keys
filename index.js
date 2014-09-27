@@ -40,8 +40,9 @@ function escapeGroup (group) {
  * @param  {Array}  keys
  * @return {RegExp}
  */
-var attachKeys = function (re, keys) {
+var attachKeys = function (re, keys, allTokens) {
   re.keys = keys;
+  re.allTokens = allTokens;
 
   return re;
 };
@@ -57,14 +58,20 @@ var attachKeys = function (re, keys) {
  * @param  {Object}                options
  * @return {RegExp}
  */
-function pathtoRegexp (path, keys, options) {
+function pathtoRegexp (path, keys, options, allTokens) {
   if (keys && !Array.isArray(keys)) {
     options = keys;
     keys = null;
   }
 
+  if (Array.isArray(options)) {
+    allTokens = options;
+    options = null;
+  }
+
   keys = keys || [];
   options = options || {};
+  allTokens = allTokens || [];
 
   var strict = options.strict;
   var end = options.end !== false;
@@ -94,15 +101,26 @@ function pathtoRegexp (path, keys, options) {
     // the same keys and options instance into every generation to get
     // consistent matching groups before we join the sources together.
     path = path.map(function (value) {
-      return pathtoRegexp(value, keys, options).source;
+      return pathtoRegexp(value, keys, options, allTokens).source;
     });
 
     // Generate a new regexp instance by joining all the parts together.
-    return attachKeys(new RegExp('(?:' + path.join('|') + ')', flags), keys);
+    return attachKeys(new RegExp('(?:' + path.join('|') + ')', flags), keys, allTokens);
+  }
+
+  var lastEndIndex = 0
+
+  function addLastToken(lastToken) {
+      if (lastEndIndex === 0 && lastToken[0] !== '/') {
+        lastToken = '/' + lastToken
+      }
+      allTokens.push({
+        string: lastToken
+      });
   }
 
   // Alter the path string into a usable regexp.
-  path = path.replace(PATH_REGEXP, function (match, escaped, prefix, key, capture, group, suffix, escape) {
+  var newPath = path.replace(PATH_REGEXP, function (match, escaped, prefix, key, capture, group, suffix, escape, offset) {
     // Avoiding re-escaping escaped characters.
     if (escaped) {
       return escaped;
@@ -116,12 +134,24 @@ function pathtoRegexp (path, keys, options) {
     var repeat   = suffix === '+' || suffix === '*';
     var optional = suffix === '?' || suffix === '*';
 
-    keys.push({
+    console.log("matched", match)
+    console.log("offset", offset)
+
+    if (offset > lastEndIndex) {
+      addLastToken(path.substring(lastEndIndex, offset))
+    }
+
+    lastEndIndex = offset + match.length;
+
+    var key = {
       name:      key || index++,
       delimiter: prefix || '/',
       optional:  optional,
       repeat:    repeat
-    });
+    }
+
+    keys.push(key);
+    allTokens.push(key);
 
     // Escape the prefix character.
     prefix = prefix ? '\\' + prefix : '';
@@ -145,8 +175,12 @@ function pathtoRegexp (path, keys, options) {
     return prefix + '(' + capture + ')';
   });
 
+  if (lastEndIndex < path.length) {
+    addLastToken(path.substring(lastEndIndex))
+  }
+
   // Check whether the path ends in a slash as it alters some match behaviour.
-  var endsWithSlash = path[path.length - 1] === '/';
+  var endsWithSlash = newPath[newPath.length - 1] === '/';
 
   // In non-strict mode we allow an optional trailing slash in the match. If
   // the path to match already ended with a slash, we need to remove it for
@@ -154,14 +188,14 @@ function pathtoRegexp (path, keys, options) {
   // anywhere in the middle. This is important for non-ending mode, otherwise
   // "/test/" will match "/test//route".
   if (!strict) {
-    path = (endsWithSlash ? path.slice(0, -2) : path) + '(?:\\/(?=$))?';
+    newPath = (endsWithSlash ? newPath.slice(0, -2) : newPath) + '(?:\\/(?=$))?';
   }
 
   // In non-ending mode, we need prompt the capturing groups to match as much
   // as possible by using a positive lookahead for the end or next path segment.
   if (!end) {
-    path += strict && endsWithSlash ? '' : '(?=\\/|$)';
+    newPath += strict && endsWithSlash ? '' : '(?=\\/|$)';
   }
 
-  return attachKeys(new RegExp('^' + path + (end ? '$' : ''), flags), keys);
+  return attachKeys(new RegExp('^' + newPath + (end ? '$' : ''), flags), keys, allTokens);
 };
