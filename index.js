@@ -134,9 +134,6 @@ function pathtoRegexp (path, keys, options, allTokens) {
     var repeat   = suffix === '+' || suffix === '*';
     var optional = suffix === '?' || suffix === '*';
 
-    console.log("matched", match)
-    console.log("offset", offset)
-
     if (offset > lastEndIndex) {
       addLastToken(path.substring(lastEndIndex, offset))
     }
