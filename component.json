@@ -1,7 +1,7 @@
 {
   "name": "path-to-regexp",
   "description": "Express style path to RegExp utility",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "keywords": [
     "express",
     "regexp",
@@ -11,5 +11,8 @@
   "scripts": [
     "index.js"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "juliangruber/isarray": "0.0.1"
+  }
 }

@@ -1,7 +1,11 @@
 {
   "name": "path-to-regexp-with-reversible-keys",
   "description": "A fork with an extra feature",
-  "version": "1.0.1",
+  "version": "1.0.3",
+  "files": [
+    "index.js",
+    "LICENSE"
+  ],
   "scripts": {
     "test": "istanbul cover node_modules/mocha/bin/_mocha -- -R spec"
   },
@@ -19,5 +23,8 @@
   "devDependencies": {
     "istanbul": "~0.3.0",
     "mocha": "~1.21.4"
+  },
+  "dependencies": {
+    "isarray": "0.0.1"
   }
 }
